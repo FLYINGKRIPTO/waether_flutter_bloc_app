@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waether_flutter_bloc_app/bloc/bloc.dart';
+import 'package:waether_flutter_bloc_app/model/weather.dart';
 
 void main() => runApp(MyApp());
 
@@ -24,6 +27,7 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
+  final weatherBloc  = WeatherBloc();
   @override
   Widget build(BuildContext context) {
 
@@ -32,33 +36,66 @@ class _WeatherPageState extends State<WeatherPage> {
 
         title: Text("Fake Weather App"),
       ),
-      body: Center(
+      body: Container(
 
-        child: Column(
-
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              "City Name",
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              "35 C",
-              style: TextStyle(fontSize: 80),
-
-            ),
-            CityInputField(),
-            
-
-          ],
+        child: BlocBuilder(
+          bloc: weatherBloc,
+          builder: (BuildContext context,WeatherState state){
+            if(state is WeatherInitial){
+              return buildInitialInput();
+            }
+            else if(state is WeatherLoading){
+              return buildLoading();
+            }
+            else if(state is WeatherLoaded){
+              return buildColumnWithData(state.weather);
+            }
+          },
 
         ),
       ),
        // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  Widget buildInitialInput() {
+    return Center(
+      child: CityInputField(),
+    );
+
+  }
+
+  Widget buildLoading() {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+
+  }
+
+  Column buildColumnWithData(Weather weather) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Text(
+          weather.cityName,
+          style: TextStyle(
+            fontSize: 40,
+
+          ),
+        ),
+        Text(
+          "${weather.temperature.toStringAsFixed(1)} C",
+          style: TextStyle(fontSize: 80),
+        ),
+        CityInputField(),
+
+      ],
+    );
+  }
+  @override
+  void dispose() {
+
+    weatherBloc.dispose();
   }
 }
 
